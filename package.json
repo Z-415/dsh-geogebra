@@ -1,0 +1,61 @@
+{
+  "name": "dsh-geogebra",
+  "version": "0.1.0",
+  "description": "用无头 Edge + CDP 执行 GeoGebra 命令并导出 PNG / .ggb 的 DSH 宿主插件：模型调 ggb_draw 即可拿到真正的 GeoGebra 图形，无窗口、不抢鼠标键盘、不改变前台窗口。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.1-rc.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "index.js",
+    "lib/render.mjs",
+    "lib/template.mjs",
+    "lib/cdp.mjs",
+    "lib/png.mjs",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "geogebra",
+    "math",
+    "geometry",
+    "plot",
+    "ggb",
+    "headless-edge",
+    "cdp"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": ">=0.2.0-rc.1"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    }
+  },
+  "dependencies": {},
+  "license": "MIT",
+  "author": "Z-415",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Z-415/dsh-geogebra.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Z-415/dsh-geogebra/issues"
+  },
+  "homepage": "https://github.com/Z-415/dsh-geogebra#readme"
+}

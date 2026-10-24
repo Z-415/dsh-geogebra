@@ -1,0 +1,12 @@
+# dsh-geogebra bundle patch
+#
+# ONE host row。`name` 必须写**包名**：正规安装时宿主从 profile 的
+# node_modules 里解析这个包名，落到它自己的 index.js。
+# （早先有人在这里写 `./lib/index.js` 这类相对路径 —— 那只在开发期软链下成立，
+#  改成正规安装后 node_modules 里没有这一层，启动时就是 failed to import。）
+#
+# 本插件没有客户端半边：不注入 web client、不注册路由，
+# 只注册两个 agent 工具（ggb_draw / ggb_eval）。
+- insert:
+    - id: geogebra
+      name: 'dsh-geogebra'

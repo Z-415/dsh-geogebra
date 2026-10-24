@@ -1,0 +1,19 @@
+# 插件加载时自己写的启动自证文件（内容随本机环境变化，不入库）
+.boot-status.json
+
+# 依赖与构建产物
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# 本地生成物
+*.log
+*.tmp
+out/
+*.png
+*.ggb
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
+desktop.ini
