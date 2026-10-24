@@ -77,9 +77,9 @@ function pick(source, keys) {
 }
 
 /** ggb_draw 的输出字段（必须与下面的 schema 声明保持一致）。 */
-const DRAW_OUTPUT_KEYS = ['ok', 'path', 'ggbPath', 'ggbBytes', 'bytes', 'width', 'height', 'dpi', 'values', 'commands', 'error', 'notes', 'elapsedMs'];
+export const DRAW_OUTPUT_KEYS = ['ok', 'path', 'ggbPath', 'ggbBytes', 'bytes', 'width', 'height', 'dpi', 'values', 'commands', 'error', 'notes', 'elapsedMs'];
 /** ggb_eval 的输出字段（同上）。 */
-const EVAL_OUTPUT_KEYS = ['ok', 'bytes', 'values', 'commands', 'error', 'elapsedMs'];
+export const EVAL_OUTPUT_KEYS = ['ok', 'bytes', 'values', 'commands', 'error', 'elapsedMs'];
 
 const commonParams = {
   commands: {

@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 契约测试：不联网、不起浏览器，几十秒跑完。
+  # 挡的是"装机才知道"的那类坑（输出 schema 越界、注册时抛错导致工具静默消失、挂载名写错）。
+  contract:
+    name: 契约测试（无需网络）
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 语法检查
+        shell: pwsh
+        run: |
+          $files = @('index.js') + (Get-ChildItem lib -Filter *.mjs | ForEach-Object { "lib/$($_.Name)" })
+          foreach ($f in $files) {
+            Write-Host "check $f"
+            node --check $f
+            if ($LASTEXITCODE -ne 0) { throw "语法错误：$f" }
+          }
+      - name: 跑契约测试
+        run: node --test test/contract.test.mjs
+
+  # 端到端：真起无头 Edge，从 geogebra.org 拉资源，验证数学判据与 .ggb。
+  # windows-latest 自带 Microsoft Edge，所以不用额外装浏览器。
+  e2e:
+    name: 端到端（真渲染）
+    runs-on: windows-latest
+    needs: contract
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 确认 Edge 存在
+        shell: pwsh
+        run: |
+          $edge = @(
+            'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
+            'C:\Program Files\Microsoft\Edge\Application\msedge.exe'
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $edge) { throw '找不到 msedge.exe，端到端无法进行' }
+          Write-Host "Edge: $edge"
+      - name: 确认能访问 geogebra.org
+        shell: pwsh
+        run: |
+          try {
+            $r = Invoke-WebRequest -Uri 'https://www.geogebra.org/apps/deployggb.js' -Method Head -TimeoutSec 30 -UseBasicParsing
+            Write-Host "deployggb.js 可访问：$($r.StatusCode)"
+          } catch {
+            throw "访问 geogebra.org 失败（本插件必须联网拉 GeoGebra 运行资源）：$($_.Exception.Message)"
+          }
+      - name: 跑端到端测试
+        run: node --test test/e2e.test.mjs
+      - name: 失败时留下日志
+        if: failure()
+        shell: pwsh
+        run: |
+          $tmp = Join-Path $env:TEMP 'dsh-geogebra-edge-profile'
+          if (Test-Path $tmp) {
+            Get-ChildItem $tmp -Force | Select-Object Name, Length | Format-Table | Out-String | Write-Host
+          }
+          Get-Process msedge -ErrorAction SilentlyContinue | Select-Object Id, StartTime | Format-Table | Out-String | Write-Host

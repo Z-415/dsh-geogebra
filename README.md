@@ -1,5 +1,7 @@
 # dsh-geogebra
 
+[![CI](https://github.com/Z-415/dsh-geogebra/actions/workflows/ci.yml/badge.svg)](https://github.com/Z-415/dsh-geogebra/actions/workflows/ci.yml)
+
 让 DSH 里的模型用**一条 GeoGebra 命令列表**画出真正的 GeoGebra 图形，落地成
 **PNG 图片**或**能用 GeoGebra 打开继续编辑的 `.ggb` 构造文件**。
 
@@ -174,10 +176,37 @@ temp HTML（lib/template.mjs）
   再把整份 base64 当 `ggbBase64` 参数重新载入 GeoGebra，读回 `f`/`T`/`A` 的值并出图。
   这是"这个文件真的能被 GeoGebra 打开"最直接的证据。
 
-## 6. 验证记录
+## 6. 测试与 CI
 
-下面的结果均来自本机实测（2026-10-24，Windows / Edge 无头 / GeoGebra 5.4.920.0；
-验收脚本是开发时的本地套件，不随本仓库发布）。想自己复核，最快的一条路径是：
+仓库自带两套测试，零 npm 依赖（用 Node 自带的 `node --test`）：
+
+```powershell
+node --test test/contract.test.mjs   # 契约测试：不联网、不起浏览器，几秒
+node --test test/e2e.test.mjs        # 端到端：真起无头 Edge、真拉 GeoGebra，约 1–2 分钟
+node --test test/                    # 两套都跑
+```
+
+| 套件 | 覆盖什么 | 需要 |
+|---|---|---|
+| `contract.test.mjs` | 清单契约（`dsh.bundle.patch` / 包名挂载）；两个工具都注册成功；**输出字段白名单与 schema 逐字段一致**；参数错误时字段不越界 | 只要 Node |
+| `e2e.test.mjs` | 数学判据（切线 `y = -2`）；PNG 尺寸 = 宽高 × dpi/96；`.ggb` 是合法 ZIP 且含 `geogebra.xml`；错误命令报错且不留文件；`ggb_eval` 不出图 | Node + Edge + 联网 |
+
+契约测试专治一类"装机后才发现"的 bug：宿主按 `additionalProperties: false` 校验输出，
+`execute()` 多返回一个字段整条结果就被拒，图其实已经生成成功了。
+（2026-10-24 就这么踩过一次：`"value.dpi" is not a declared property`。）
+
+CI 在 `windows-latest` 上跑这两套（GitHub 的 Windows runner 自带 Microsoft Edge）：
+
+```yaml
+.github/workflows/ci.yml
+  contract  契约测试
+  e2e       端到端（依赖 contract 通过；先确认 Edge 存在、geogebra.org 可达）
+```
+
+## 7. 验证记录
+
+下面的结果均来自本机实测（2026-10-24，Windows / Edge 无头 / GeoGebra 5.4.920.0）。
+想自己复核：
 
 ```powershell
 # 会话里让模型调用（或在装了本插件的 DSH 里直接说）
@@ -207,23 +236,28 @@ ggb_draw(commands: ["f(x)=x^3-3x", "T=Tangent(1,f)", "A=(1,-2)"],
 > 装机后第一次真实调用踩到一个 bug：`renderToPng` 返回 `dpi` 但 schema 没声明，宿主拒收
 > （图已生成，调用方只看到 invalid output）。已用 §5.2 的 `pick()` 白名单修掉。
 
-## 7. 文件清单
+## 8. 文件清单
 
 ```
 dsh-geogebra/
-├─ package.json        # 包声明（dsh.bundle.patch + engines.dsh）
-├─ cordis.patch.yml    # 挂载声明（name 写包名）
-├─ index.js            # 宿主插件：注册 ggb_draw / ggb_eval + 启动自证
+├─ package.json              # 包声明（dsh.bundle.patch + engines.dsh + test 脚本）
+├─ cordis.patch.yml          # 挂载声明（name 写包名）
+├─ index.js                  # 宿主插件：注册 ggb_draw / ggb_eval + 启动自证
 ├─ lib/
-│  ├─ render.mjs       # 渲染核心：命令 → 无头 Edge → PNG / .ggb 落盘
-│  ├─ template.mjs     # HTML 模板（命令注入、关界面、暴露 window.__ggb）
-│  ├─ cdp.mjs          # 极简 CDP 客户端（零依赖，Node 自带 WebSocket）
-│  └─ png.mjs          # 极简 PNG 编解码（零依赖，透明背景用）
-├─ LICENSE             # MIT
+│  ├─ render.mjs             # 渲染核心：命令 → 无头 Edge → PNG / .ggb 落盘
+│  ├─ template.mjs           # HTML 模板（命令注入、关界面、暴露 window.__ggb）
+│  ├─ cdp.mjs                # 极简 CDP 客户端（零依赖，Node 自带 WebSocket）
+│  └─ png.mjs                # 极简 PNG 编解码（零依赖，透明背景用）
+├─ test/
+│  ├─ contract.test.mjs      # 契约测试：清单 / 注册 / 输出字段 vs schema
+│  ├─ e2e.test.mjs           # 端到端：真起 Edge，验数学判据与 .ggb
+│  └─ helpers.mjs            # 测试公用：复制插件 + dsh-tools stub + retry
+├─ .github/workflows/ci.yml  # CI：windows-latest，contract → e2e
+├─ LICENSE                   # MIT
 └─ README.md
 ```
 
-## 8. 许可
+## 9. 许可
 
 MIT，见 [LICENSE](LICENSE)。
 

@@ -39,6 +39,11 @@
     "headless-edge",
     "cdp"
   ],
+  "scripts": {
+    "test": "node --test test/",
+    "test:contract": "node --test test/contract.test.mjs",
+    "test:e2e": "node --test test/e2e.test.mjs"
+  },
   "peerDependencies": {
     "@deepseek-ai/dsh-tools": ">=0.2.0-rc.1"
   },
