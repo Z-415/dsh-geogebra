@@ -20,7 +20,11 @@
 # 方式 A：直接从 GitHub 装（推荐）
 dsh plugin --profile desktop add github:Z-415/dsh-geogebra
 
-# 方式 B：本地开发，link 到某个目录（改代码不用重装）
+# 方式 B：用 Release 里的离线包（github.com 访问不稳时走这条）
+#   从 https://github.com/Z-415/dsh-geogebra/releases/latest 下载 dsh-geogebra-0.1.0.tgz
+dsh plugin --profile desktop add file:<tgz 的绝对路径>
+
+# 方式 C：本地开发，link 到某个目录（改代码不用重装）
 dsh plugin --profile desktop add link:<本仓库的绝对路径>   # 例：link:D:\code\dsh-geogebra
 
 # 装完必须完全重启 DSH Desktop（托盘右键 → 退出 → 重开），工具才会注册

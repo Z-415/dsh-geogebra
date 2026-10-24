@@ -12,6 +12,7 @@ pnpm-lock.yaml
 out/
 *.png
 *.ggb
+*.tgz
 
 # 系统垃圾
 .DS_Store
